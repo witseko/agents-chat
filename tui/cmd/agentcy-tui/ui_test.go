@@ -650,6 +650,18 @@ func TestClosedChatsStayInACollapsedClosedSection(t *testing.T) {
 	}
 }
 
+func TestTopBarCountsOnlyOpenChats(t *testing.T) {
+	fake := &fakeOperator{list: ConversationList{Conversations: []ConversationSummary{
+		{Conversation: "old", Title: "Old work"}, {Conversation: "live", Title: "Live work", Open: true},
+	}}}
+	m := sized(newModel(fake, "/work"), 120, 30)
+	m = drive(t, m, m.loadList())
+
+	if bar := ansi.Strip(m.topBar()); !strings.Contains(bar, "· 1 chats") {
+		t.Fatalf("top bar counts closed chats: %q", bar)
+	}
+}
+
 func TestClosingTheOpenChatMovesItIntoTheCollapsedSection(t *testing.T) {
 	fake := &fakeOperator{list: ConversationList{Conversations: []ConversationSummary{
 		{Conversation: testConversation, Title: "Review the retry rule.", Open: true},

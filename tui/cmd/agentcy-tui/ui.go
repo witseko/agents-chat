@@ -571,14 +571,20 @@ func (m model) topBar() string {
 }
 
 // topBarLayout names the app and checkout on the left and shows the status and the Cores
-// button on the right. It returns the line and the button's zone on row 0.
+// button on the right. The active view counts only open chats. It returns the line and the
+// button's zone on row 0.
 func (m model) topBarLayout() (string, []zone) {
 	left := " " + brightStyle.Render("agentcy") + "  " + dimStyle.Render(cleanLine(m.directory))
-	kind := "chats"
-	if m.list.archived {
-		kind = "archived chats"
+	kind, count := "chats", 0
+	for _, item := range m.list.items {
+		if item.Open {
+			count++
+		}
 	}
-	right := okStyle.Render("●") + dimStyle.Render(fmt.Sprintf(" core running · %d %s ", len(m.list.items), kind))
+	if m.list.archived {
+		kind, count = "archived chats", len(m.list.items)
+	}
+	right := okStyle.Render("●") + dimStyle.Render(fmt.Sprintf(" core running · %d %s ", count, kind))
 	switch {
 	case m.offline:
 		right = warnStyle.Render("▲ core not reachable, retrying ")
