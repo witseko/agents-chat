@@ -31,6 +31,8 @@ func (m model) homeKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "n":
 		return m.openForm()
+	case "c":
+		return m.openCores()
 	case "/", "a", "v", "e":
 		return m.listAction(msg.String())
 	case "r":

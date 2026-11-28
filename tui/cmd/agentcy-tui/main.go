@@ -43,6 +43,8 @@ func run(workspace string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tea.NewProgram(newModel(NewClient(home), directory)).Run()
+	ui := newModel(NewClient(home), directory)
+	ui.dataDir = home
+	_, err = tea.NewProgram(ui).Run()
 	return err
 }
