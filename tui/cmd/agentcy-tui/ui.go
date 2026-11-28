@@ -543,14 +543,20 @@ func (m model) dividers(hasList bool, hasTeam bool) []string {
 	return nil
 }
 
-// topBar names the app and checkout on the left and shows the status on the right.
+// topBar names the app and checkout on the left and shows the status on the right. The active
+// view counts only open chats.
 func (m model) topBar() string {
 	left := " " + brightStyle.Render("agentcy") + "  " + dimStyle.Render(cleanLine(m.directory))
-	kind := "chats"
-	if m.list.archived {
-		kind = "archived chats"
+	kind, count := "chats", 0
+	for _, item := range m.list.items {
+		if item.Open {
+			count++
+		}
 	}
-	right := okStyle.Render("●") + dimStyle.Render(fmt.Sprintf(" core running · %d %s ", len(m.list.items), kind))
+	if m.list.archived {
+		kind, count = "archived chats", len(m.list.items)
+	}
+	right := okStyle.Render("●") + dimStyle.Render(fmt.Sprintf(" core running · %d %s ", count, kind))
 	switch {
 	case m.offline:
 		right = warnStyle.Render("▲ core not reachable, retrying ")
