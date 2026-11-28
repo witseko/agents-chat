@@ -160,6 +160,12 @@ type model struct {
 	inviteWindow inviteState
 	contextMenu  contextMenuState
 	rename       renameState
+	// cores is the window that lists and stops the running agentcy cores.
+	cores coresState
+	// processes finds and stops core processes; dataDir is the data directory of this UI's
+	// core, used to mark it in the cores window.
+	processes CoreProcesses
+	dataDir   string
 	// popup is the error or success notice drawn over the screen.
 	popup popupState
 	// taskAlert stops a close or an archive while tasks are unfinished.
@@ -194,6 +200,7 @@ func newModel(client Operator, directory string) model {
 		teamCols:          teamWidth,
 		archivedCollapsed: true,
 		search:            newSearch(),
+		processes:         systemCores{},
 		invitations:       map[string]map[string]JoinInvitation{},
 		openInvites:       map[string]OpenInviteInvitation{},
 	}
@@ -279,6 +286,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.onRenamed(msg)
 	case searchedMsg:
 		return m.onSearched(msg), nil
+	case coresMsg:
+		return m.onCores(msg), nil
+	case coreStoppedMsg:
+		return m.onCoreStopped(msg)
 	case copiedMsg:
 		return m.onCopied(msg), nil
 	case textCopiedMsg:
@@ -291,6 +302,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if m.popup.kind != popupNone {
 		return m.popupKey(msg)
+	}
+	if m.cores.open {
+		return m.coresKey(msg)
 	}
 	if m.taskAlert.open {
 		return m.taskAlertKey(msg)
@@ -320,6 +334,9 @@ func (m model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 // text field that has focus.
 func (m model) updateFocusedInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var command tea.Cmd
+	if m.cores.open {
+		return m, nil
+	}
 	if m.rename.open {
 		m.rename.input, command = m.rename.input.Update(msg)
 		return m, command
@@ -470,6 +487,10 @@ func (m model) View() tea.View {
 		body = m.drawRename(body)
 		help = []hint{{"⏎", "rename"}, {"esc", "cancel"}}
 	}
+	if m.cores.open {
+		body = m.drawCores(body)
+		help = m.coresHelp()
+	}
 	if m.contextMenu.open {
 		body = m.drawContextMenu(body)
 		help = m.contextMenuHelp()
@@ -543,8 +564,15 @@ func (m model) dividers(hasList bool, hasTeam bool) []string {
 	return nil
 }
 
-// topBar names the app and checkout on the left and shows the status on the right.
+// topBar draws the top bar line.
 func (m model) topBar() string {
+	line, _ := m.topBarLayout()
+	return line
+}
+
+// topBarLayout names the app and checkout on the left and shows the status and the Cores
+// button on the right. It returns the line and the button's zone on row 0.
+func (m model) topBarLayout() (string, []zone) {
 	left := " " + brightStyle.Render("agentcy") + "  " + dimStyle.Render(cleanLine(m.directory))
 	kind := "chats"
 	if m.list.archived {
@@ -557,11 +585,15 @@ func (m model) topBar() string {
 	case m.status != "":
 		right = textStyle.Render(cleanLine(m.status) + " ")
 	}
+	coresButton, spans := m.buttons(button{id: "cores", label: "Cores"})
+	buttonStart := ansi.StringWidth(right)
+	right += coresButton + " "
 	gap := m.width - ansi.StringWidth(left) - ansi.StringWidth(right)
 	if gap < 1 {
-		return fill(right, m.width, colorBar)
+		return fill(right, m.width, colorBar), place(visibleSpans(spans, m.width-buttonStart), buttonStart, 0)
 	}
-	return fill(left+strings.Repeat(" ", gap)+right, m.width, colorBar)
+	buttonStart += ansi.StringWidth(left) + gap
+	return fill(left+strings.Repeat(" ", gap)+right, m.width, colorBar), place(spans, buttonStart, 0)
 }
 
 // tick schedules the next poll.
