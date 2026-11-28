@@ -31,6 +31,10 @@ func (m model) zones() []zone {
 		_, hintSpans := m.hintBar(m.contextMenuHelp())
 		return place(hintSpans, 1, m.height-1)
 	}
+	if m.cores.open {
+		_, hintSpans := m.hintBar(m.coresHelp())
+		return place(hintSpans, 1, m.height-1)
+	}
 	bodyHeight := max(m.height-2, 1)
 	help := m.mainHelp()
 	switch m.screen {
@@ -41,6 +45,8 @@ func (m model) zones() []zone {
 	}
 	_, hintSpans := m.hintBar(help)
 	zones := place(hintSpans, 1, m.height-1)
+	_, topZones := m.topBarLayout()
+	zones = append(zones, topZones...)
 	if m.screen == screenNew {
 		return append(zones, m.formZones(bodyHeight)...)
 	}
@@ -263,6 +269,8 @@ func (m model) clickZone(id string) (tea.Model, tea.Cmd) {
 		return m.openForm()
 	case "search":
 		return m.openSearch()
+	case "cores":
+		return m.openCores()
 	case "view":
 		return m.showArchive(argument == "archived")
 	case "tab":

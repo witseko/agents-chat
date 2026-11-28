@@ -76,6 +76,12 @@ func (m model) onClick(mouse tea.Mouse) (tea.Model, tea.Cmd) {
 	if mouse.Button != tea.MouseLeft {
 		return m, nil
 	}
+	if m.cores.open {
+		if id := m.zoneAt(mouse.X, mouse.Y); id != "" {
+			return m.clickZone(id)
+		}
+		return m.clickCores(mouse.X, mouse.Y-1, max(m.height-2, 1))
+	}
 	if m.contextMenu.open {
 		if mouse.Y == m.height-1 {
 			if id := m.zoneAt(mouse.X, mouse.Y); id != "" {

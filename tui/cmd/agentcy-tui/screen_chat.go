@@ -733,6 +733,8 @@ func (m model) chatListKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "n":
 		return m.openForm()
+	case "c":
+		return m.openCores()
 	case "/", "a", "v", "e":
 		return m.listAction(msg.String())
 	case "esc":
@@ -1560,9 +1562,9 @@ func (m model) archivedHint() string {
 // listHints returns the search, archive, rename and view hints of the chat list.
 func (m model) listHints() []hint {
 	if m.list.archived {
-		return []hint{{"/", "search"}, {"a", "unarchive"}, {"e", "rename"}, {"v", "active chats"}}
+		return []hint{{"/", "search"}, {"a", "unarchive"}, {"e", "rename"}, {"v", "active chats"}, {"c", "cores"}}
 	}
-	return []hint{{"/", "search"}, {"a", "archive"}, {"e", "rename"}, {"v", "archived chats"}}
+	return []hint{{"/", "search"}, {"a", "archive"}, {"e", "rename"}, {"v", "archived chats"}, {"c", "cores"}}
 }
 
 // mouseHint names what ctrl+o does now.

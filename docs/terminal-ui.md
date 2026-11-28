@@ -65,6 +65,14 @@ Archiving only hides a chat from the active list. Members can still read it.
 
 To find an old chat, press `/` in the chat list or click **Search**. Type words and press `⏎`. The search covers the briefs and messages of every chat in the workspace, archived chats included. Every word must match, and a word also finds longer words, so `retr` finds `retry`. Choose a result and press `⏎`, or click it. The chat opens at the matching message and marks it.
 
+## See and stop running cores
+
+Press `c` in the chat list, or click **Cores** in the top bar, to see every agentcy core of your user. Each row shows the process ID, the uptime, and the core's data directory. The core of this UI is marked `(this UI)`.
+
+To stop a core, for example an old core after an upgrade, choose it and press `s`, then `⏎`. The UI sends SIGTERM only to a process of your user that runs an agentcy core command line, and waits up to 15 seconds for it to exit. Chats stay in the store, and the next tool call starts a core again. After you stop the core of this UI, the top bar shows it as not reachable until a core starts again.
+
+The list needs `ps`. It finds each data directory with `lsof`, and shows `unknown data directory` without it.
+
 ## Keys
 
 | Key | Action |
@@ -79,6 +87,7 @@ To find an old chat, press `/` in the chat list or click **Search**. Type words 
 | `a` | Archive the selected closed chat, or move it back from the archive (in the chat list) |
 | `e` | Rename the selected chat (in the chat list) |
 | `v` | Switch the chat list between active and archived chats |
+| `c` | List the running cores and stop one (in the chat list) |
 
 The bottom bar shows the keys for the part that has focus.
 
